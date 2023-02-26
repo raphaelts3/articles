@@ -17,14 +17,14 @@ jobs:
         uses: sinedied/publish-devto@v2
         with:
           devto_key: ${{ secrets.DEVTO_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PERSONAL_TOKEN }}
           files: "markdown/**/*.md"
           dry_run: ${{ github.event_name == 'pull_request' }}
 
       - uses: actions-ecosystem/action-create-comment@v1
         if: ${{ github.event_name == 'pull_request' }}
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PERSONAL_TOKEN }}
           body: |
             Changes result:
             ```
