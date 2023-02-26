@@ -1,6 +1,6 @@
 ---
 title: Introduction to WYD encryption and decryption using Rust
-published: false
+published: true
 description: An article used to introduce the WYD encryption and decryption using Rust
 tags: 'rust, wyd, encryption, mmorpg'
 cover_image: null
