@@ -5,6 +5,8 @@ description: An article used to introduce the WYD encryption and decryption usin
 tags: 'rust, encryption, mmorpg, wyd'
 cover_image: null
 canonical_url: null
+id: 1380442
+date: '2023-02-26T20:51:04Z'
 ---
 
 This article is the first of an MMORPG's WYD open-source server development series.
