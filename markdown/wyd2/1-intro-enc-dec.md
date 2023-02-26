@@ -7,25 +7,25 @@ cover_image: null
 canonical_url: null
 ---
 
-This article is the first of a MMORPG's WYD open source server development series.
+This article is the first of an MMORPG's WYD open-source server development series.
 
-> This series will written with the help of Github Copilot and be revised with ChatGPT.
+> This series will be written with the help of Github Copilot and will be revised with ChatGPT.
 
 ## Background
 
-I have started my life into the programming world, as many others, building tools, hacks and bots for MMORPG's games. In my case it was the MMORPG game called "With Your Destiny" a.k.a. W.Y.D.. After a while in the hidden side, I received an offer to work in the server side of the game, I accepted it, and many Assembly, C and C++ code later, I was able to understand the game's core and how it works. At a certain point, just reversing and hooking stuff was not enough to accomplish what we wanted, so I started to build our own server from scratch. I have (re)built our data server and started to work on the game server, but I have never finished it.
+Like many others, I started my journey into the programming world building tools, hacks, and bots for MMORPG games. In my case, it was the MMORPG game called "With Your Destiny" a.k.a. W.Y.D. After a while working in the hidden side, I received an offer to work on the server-side of the game, I accepted it, and many lines of Assembly, C, and C++ code later, I was able to understand the game's core and how it works. At a certain point, reversing and hooking stuff was not enough to accomplish what we wanted, so I started to build our own server from scratch. I rebuilt our data server and started to work on the game server, but I never finished it.
 
-> I have left the company and the project, but I have never stopped thinking about it. I have always wanted to finish it, but I have never had the time to do it. I have always wanted to share my knowledge with the community, but I have never had the time to do it. I have always wanted to open source the project, but I have never had the time to do it. I have always wanted to write about it, but I have never had the time to do it. (_This paragraph was suggested as it is by Copilot and it makes sense, so I will left it here._)
+> I have left the company and the project, but I have never stopped thinking about it. I have always wanted to finish it, but I have never had the time to do it. I have always wanted to share my knowledge with the community, but I have never had the time to do it. I have always wanted to open source the project, but I have never had the time to do it. I have always wanted to write about it, but I have never had the time to do it. (_This paragraph was written as it is by Copilot and it makes sense, so I will left it here._)
 
-Back to the me, many years has passed since that point, web development has become my main job, then reverse engineer again, more professional this time, but I never stopped touching in that server project. Align with that I recently started to learn Rust and decided to get back to the project using Rust, so after finishing the book [Rust for Rustaceans](https://nostarch.com/rust-rustaceans) I decided to start this series of articles.
+Many years have passed since that point, and web development has become my main job. However, I never stopped working on that server project. Recently, I started to learn Rust and decided to get back to the project using Rust. After finishing the book [Rust for Rustaceans](https://nostarch.com/rust-rustaceans), I decided to start this series of articles.
 
 ## Disclaimer
 
-This series will not cover all the game details, it is intended to be an extension from my note books about the process that I will walkthrough while (re)writing the data and game servers in Rust.
+This series will not cover all the game details. Instead, it is intended to be an extension of my notebooks about the process that I will go through while (re)writing the data and game servers in Rust.
 
 ## WYD packet structure
 
-The WYD packets are structured using C default alignment, therefore in Rust it requires `#[repr(C)]` to keep the consistency. The minimal packet structure is composed by 12 bytes and all other packets are an extension of the minimal structure, it can be represented as the following struct:
+The WYD packets are structured using C default alignment. Therefore, in Rust, it requires `#[repr(C)]` to maintain consistency. The minimal packet structure is composed of 12 bytes, and all other packets are an extension of the minimal structure. It can be represented as the following struct:
 
 ```C++
 struct MsgHeader {
@@ -52,7 +52,7 @@ pub struct MsgHeader {
 
 ## WYD encryption and decryption
 
-The WYD encryption and decryption is a series of simple arithmetic operations, that uses a pre-defined array of 512 bytes keys, and a byte as seed. The encryption and decryption is done per byte, and the seed is incremented by 1 after each block.
+The WYD encryption and decryption are a series of simple arithmetic operations that use a pre-defined array of 512-byte keys and a byte as seed. The encryption and decryption are done per byte, and the seed is incremented by 1 after each block.
 
 The C++ version of the **encryption** function is the following:
 
@@ -118,21 +118,21 @@ void encrypt(MsgHeader *packet) {
 }
 ```
 
-You might have noticed that encryption and decryption are very similar, but naturally to get the original value in the decryption you need to do the opposite operation in the encryption. The other differences are:
+You might have noticed that encryption and decryption are very similar, but naturally to get the original value in the decryption, you need to do the opposite operation in the encryption. The other differences are:
 
-1) the encryption uses a random seed;
-2) the decryption uses the seed from the packet;
-3) the decryption needs to careful consider overflow and underflow.
+1) The encryption uses a random seed;
+2) The decryption uses the seed from the packet;
+3) The decryption needs to carefully consider overflow and underflow.
 
 ## Converting the decryption into Rust code
 
-This is the thing first I have focused while (re)writing the encryption and decryption in Rust, and I have found a way to do it in Rust, actually I have found three ways to do that and in this article I will talk a bit about each one of them and my final decision. (I have a certain hope that some Rust experts might bump into this and give me some hints.)
+This is the thing first I have focused on while (re)writing the encryption and decryption in Rust, and I have found a way to do it in Rust. Actually, I have found three ways to do that, and in this article, I will talk a bit about each one of them and my final decision. (I have a certain hope that some Rust experts might bump into this and give me some hints.)
 
-Using Rust you can't _just_ `reinterpret_cast` a struct to a byte array, and since I'm pretty new to this, SO I have started by considering an input of `&mut Vec<u8>` and focused in doing the byte arithmetics in Rust.
+Using Rust, you can't _just_ `reinterpret_cast` a struct to a byte array, and since I'm pretty new to this, SO I have started by considering an input of `&mut Vec<u8>` and focused on doing the byte arithmetic in Rust.
 
 ### Dummy version
 
-The first version I made was the most _Rust++_ version possible, build a huge unsafe block and play with raw pointer the same way I was doing in C++. The code turns out to be:
+The first version I made was the most Rust++ version possible: building a huge unsafe block and playing with raw pointers the same way I was doing in C++. The code turns out to be:
 
 ```rust
     pub fn decrypt(raw_data: &mut Vec<u8>, keys: &[u8]) -> Vec<u8> {
@@ -175,7 +175,7 @@ The first version I made was the most _Rust++_ version possible, build a huge un
 
 ### Safe version
 
-The second version I built was after watching all [Crust of Rust](https://www.youtube.com/watch?v=rAl-9HwD858&list=PLqbS7AVVErFiWDOAVrPt7aYmnuuOLYvOa) videos, the main difference is does **not** use raw pointers, instead it uses `Cursor`, it's _slightly_ slower(probably not relevant in the production code) but it's much more readable and safer(literally no `unsafe` code). This version is the following:
+The second version I built was after watching all [Crust of Rust](https://www.youtube.com/watch?v=rAl-9HwD858&list=PLqbS7AVVErFiWDOAVrPt7aYmnuuOLYvOa) videos. The main difference is that it does **not** use raw pointers. Instead, it uses `Cursor`. It's _slightly_ slower (probably not relevant in the production code), but it's much more readable and safer (literally no `unsafe` code). This version is the following:
 
 ```rust
     pub fn decrypt_cursor(raw_data: &mut Vec<u8>, keys: &[u8]) -> Vec<u8> {
@@ -211,7 +211,7 @@ The second version I built was after watching all [Crust of Rust](https://www.yo
 
 ### Final version
 
-The third version I built after started checking how I was going to use that in a `connection/frame` layer, and it's basically the second version, but with more direct input now. This is likely the version that will be embedded into the server, unless I get better suggestions. Check it below:
+The third version I built after starting to check how I was going to use that in a `connection/frame` layer, and it's basically the second version, but with more direct input now. This is likely the version that will be embedded into the server, unless I get better suggestions. Check it below:
 
 ```rust
     pub fn decode(&self, buffer: &mut Cursor<&mut [u8]>) {
@@ -231,24 +231,24 @@ The third version I built after started checking how I was going to use that in 
     }
 ```
 
-All theses versions, but the last, can be found [here](https://github.com/raphaelts3/wyd2encdec/blob/cc34f1f4a1056d54c79430985dbe8ca2092cd1bc/rust/src/lib.rs). The last one will be shared in the future when I start to publish the server code.
+All these versions, but the last, can be found [here](https://github.com/raphaelts3/wyd2encdec/blob/cc34f1f4a1056d54c79430985dbe8ca2092cd1bc/rust/src/lib.rs). The last one will be shared in the future when I start to publish the server code.
 
 ## Thoughts on C++ vs Rust so far
 
 - First of all, you must consider that I am implementing something that _must_ respect the original algorithm;
-- The `unsafe` can be really tempting if you are coming from C/C++, but I think that it's a good thing that Rust forces you to think about the safety of your code;
-- The _dummy_ version was pretty straightforward to implement, but the _safe_ version was a bit tricker to get to, because I was not familiar with the ecosystem, and there was not much samples of what I was trying to do.
-  - _(However, I honestly think that I have started with something that isn't a day-to-day thing, so that also shreds the amount of samples in the web.)_
+- The `unsafe` can be really tempting if you are coming from C and C++, but I think that it's a good thing that Rust forces you to think about the safety of your code;
+- The _dummy_ version was pretty straightforward to implement, but the _safe_ version was a bit trickier to get to because I was not familiar with the ecosystem, and there were not many samples of what I was trying to do.
+  - _(However, I honestly think that I have started with something that isn't a day-to-day thing, so that also reduces the amount of samples on the web.)_
 
-That said, I am quite happy with the latest version, even thought it is not the most performant, it's the most readable and does not use any `unsafe`.
+That said, I am quite happy with the latest version. Even though it is not the most performant, it's the most readable and does not use any `unsafe`.
 
 ## Final thoughts
 
 The next challenges should be related to easily convert a `MsgHeader`-like struct into a `&[u8]` and vice-versa, and to _extend_ it to the dozens of other packets that the game has, but that's a topic for the future.
 
-The source code of the algorithms discussed here can be found in [this](https://github.com/raphaelts3/wyd2encdec) repository. There you might find it in C++, C#, Java, Go, PHP, Rust, and feel free to contribute to the project with your own implementation.
+The source code of the algorithms discussed here can be found in [this](https://github.com/raphaelts3/wyd2encdec) repository. There, you might find it in C++, C#, Java, Go, PHP, Rust, and feel free to contribute to the project with your own implementation.
 
-_I don't have any schedule to this series, but I do hope that starting this series will help me to keep working on the project and to keep sharing my knowledge with the community._
+_I don't have any schedule for this series, but I do hope that starting this series will help me to keep working on the project and to keep sharing my knowledge with the community._
 
 ## References
 
@@ -256,3 +256,4 @@ _I don't have any schedule to this series, but I do hope that starting this seri
 - [The WYD2EncDec repository](https://github.com/raphaelts3/wyd2encdec).
 - The [Rust for Rustaceans](https://nostarch.com/rust-rustaceans) book.
 - The [Rust Programming Language](https://doc.rust-lang.org/book/) book.
+- The [Crust of Rust](https://www.youtube.com/watch?v=rAl-9HwD858&list=PLqbS7AVVErFiWDOAVrPt7aYmnuuOLYvOa) series.
